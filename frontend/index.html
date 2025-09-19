@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Study Buddy Notes</title>
+</head>
+<body>
+  <h1>📚 Study Buddy Cloud Notes</h1>
+
+  <h2>Upload Note</h2>
+  <textarea id="noteText"></textarea><br>
+  <button onclick="uploadNote()">Upload</button>
+
+  <h2>Fetch Note</h2>
+  <input type="text" id="noteId" placeholder="Enter Note ID">
+  <button onclick="fetchNote()">Fetch</button>
+  <p id="noteOutput"></p>
+
+  <script>
+    const API_BASE = "https://nxbcl5b324.execute-api.us-east-1.amazonaws.com/dev";
+
+    async function uploadNote() {
+      let text = document.getElementById("noteText").value.trim();
+      if (!text) {
+        alert("Please enter some text before uploading.");
+        return;
+      }
+      try {
+        const res = await fetch(API_BASE + "/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note: text })
+        });
+
+        let raw = await res.json(); // raw = { body: "...", statusCode: 200 }
+        let data = raw.body ? JSON.parse(raw.body) : raw;
+
+        if (data.note_id) {
+          alert("✅ Note uploaded! Your Note ID is: " + data.note_id);
+        } else {
+          alert("❌ Upload failed: " + JSON.stringify(data));
+        }
+      } catch (err) {
+        alert("⚠️ Error: " + err);
+      }
+    }
+
+    async function fetchNote() {
+      let noteId = document.getElementById("noteId").value.trim();
+      if (!noteId) {
+        alert("Please enter a Note ID.");
+        return;
+      }
+      try {
+        const res = await fetch(API_BASE + "/fetch?note_id=" + encodeURIComponent(noteId));
+        let raw = await res.json();
+        let data = raw.body ? JSON.parse(raw.body) : raw;
+
+        if (data.note) {
+          document.getElementById("noteOutput").innerText = data.note;
+        } else {
+          document.getElementById("noteOutput").innerText = "❌ Note not found or error occurred.";
+        }
+      } catch (err) {
+        document.getElementById("noteOutput").innerText = "⚠️ Error: " + err;
+      }
+    }
+  </script>
+</body>
+</html>
